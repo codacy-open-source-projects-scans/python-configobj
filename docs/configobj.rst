@@ -281,9 +281,10 @@ ConfigObj takes the following arguments (with the default values shown) :
     * Nothing. In which case the ``filename`` attribute of your ConfigObj will be
       ``None``. You can set a filename at any time.
 
-    * A filename. What happens if the file doesn't already exist is determined by
-      the options ``file_error`` and ``create_empty``. The filename will be
-      preserved as the ``filename`` attribute. This can be changed at any time.
+    * A filename or pathlib.Path object. What happens if the file doesn't already
+      exist is determined by the options ``file_error`` and ``create_empty``. The
+      filename will be preserved as the ``filename`` attribute. This can be
+      changed at any time.
 
     * A list of lines. Any trailing newlines will be removed from the lines. The
       ``filename`` attribute of your ConfigObj will be ``None``.
@@ -417,8 +418,7 @@ ConfigObj takes the following arguments (with the default values shown) :
 
     ``default_encoding``, if specified, is the encoding used to decode byte
     strings in the **ConfigObj** before writing. If this is ``None``, then
-    the Python default encoding (``sys.defaultencoding`` - usually ASCII) is
-    used.
+    a default encoding (currently ASCII) is used.
     
     For most Western European users, a value of ``latin-1`` is sensible.
     
@@ -869,7 +869,8 @@ members) will first be decoded to Unicode using the encoding specified by the
 ``default_encoding`` attribute. This ensures that the output is in the encoding
 specified.
 
-If this value is ``None`` then ``sys.defaultencoding`` is used instead.
+If this value is ``None`` then a default encoding (currently ASCII) is used to decode
+any byte-strings in your ConfigObj instance.
 
 
 unrepr

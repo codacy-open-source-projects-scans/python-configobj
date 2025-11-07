@@ -4,6 +4,7 @@ import os
 import re
 
 from codecs import BOM_UTF8
+from pathlib import Path
 from warnings import catch_warnings
 from tempfile import NamedTemporaryFile
 
@@ -542,13 +543,13 @@ class TestWritingConfigs(object):
             'key1 = Hello',
             '',
             '# section comment',
-            '[section]# inline comment',
+            '[section] # inline comment',
             '# key1 comment',
             'key1 = 6',
             '# key2 comment',
             'key2 = True',
             '# subsection comment',
-            '[[sub-section]]# inline comment',
+            '[[sub-section]] # inline comment',
             '# another key1 comment',
             'key1 = 3.0'
         ]
@@ -560,9 +561,9 @@ class TestWritingConfigs(object):
             'key2 =# a comment',
         ]
         cfg = ConfigObj(config_with_empty_values)
-        assert cfg.write() == ['', 'key1 = ""', 'key2 = ""# a comment']
+        assert cfg.write() == ['', 'key1 = ""', 'key2 = "" # a comment']
         cfg.write_empty_values = True
-        assert cfg.write() == ['', 'key1 = ', 'key2 = # a comment']
+        assert cfg.write() == ['', 'key1 = ', 'key2 =  # a comment']
 
 
 class TestUnrepr(object):
@@ -1104,6 +1105,24 @@ def test_creating_with_a_dictionary():
     assert dictionary_cfg_content == cfg.dict()
     assert dictionary_cfg_content is not cfg.dict()
 
+def test_reading_a_pathlib_path(cfg_contents):
+    cfg = cfg_contents("""
+[section]
+foo = bar""")
+    c = ConfigObj(Path(cfg))
+    assert 'foo' in c['section']
+
+def test_creating_a_file_from_pathlib_path(tmp_path):
+    infile = tmp_path / 'config.ini'
+    assert not Path(tmp_path / 'config.ini').is_file()
+    c = ConfigObj(Path(infile), create_empty=True)
+    assert Path(tmp_path / 'config.ini').is_file()
+
+def test_creating_a_file_from_string(tmp_path):
+    infile = str(tmp_path / 'config.ini')
+    assert not Path(infile).is_file()
+    c = ConfigObj(infile, create_empty=True)
+    assert Path(infile).is_file()
 
 class TestComments(object):
     @pytest.fixture
@@ -1162,6 +1181,12 @@ class TestComments(object):
         c = ConfigObj()
         c['foo'] = 'bar'
         c.inline_comments['foo'] = 'Nice bar'
+        assert c.write() == ['foo = bar # Nice bar']
+
+    def test_inline_comments_with_leading_number_sign(self):
+        c = ConfigObj()
+        c['foo'] = 'bar'
+        c.inline_comments['foo'] = '# Nice bar'
         assert c.write() == ['foo = bar # Nice bar']
 
     def test_unrepr_comments(self, comment_filled_cfg):
